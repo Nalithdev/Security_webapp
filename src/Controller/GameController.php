@@ -27,13 +27,20 @@ class GameController extends AbstractController
     {
         $games = $entityManager->getRepository(Game::class)->find($game);
         return $this->render('game/show.html.twig', [
-            'games' => $games,
+            'game' => $games,
         ]);
     }
 
     #[Route('/game/delete/{slug}', name: 'app_game_delete')]
     public function delete(EntityManagerInterface $entityManager, string $slug, Request $r): Response
     {
+        $user = $this->getUser();
+        if ($user === null) {
+            return $this->redirectToRoute('app_login');
+        }
+        elseif ($user->getRoles()[0] !== 'ROLE_ADMIN') {
+            return $this->redirectToRoute('app_game');
+        }
         $game = $entityManager->getRepository(Game::class)->findOneBy(['slug' => $slug]);
         if ($this->isCsrfTokenValid('delete'.$game->getId(), $r->request->get('csrf'))) {
             $entityManager->remove($game);
@@ -42,15 +49,24 @@ class GameController extends AbstractController
         return $this->redirectToRoute('app_game');
     }
     #[Route('/game/edit/{slug}', name: 'app_game_edit')]
-    public function edit(EntityManagerInterface $entityManager, string $slug, Request $request): Response
+    public function edit(EntityManagerInterface $entityManager, string $slug, Request $request, SluggerInterface $slugger): Response
     {
+        $user = $this->getUser();
+        if ($user === null) {
+            return $this->redirectToRoute('app_login');
+        }
+        elseif ($user->getRoles()[0] !== 'ROLE_ADMIN') {
+            return $this->redirectToRoute('app_game');
+        }
         $game = $entityManager->getRepository(Game::class)->findOneBy(['slug' => $slug]);
         $form = $this->createForm(GameType::class, $game);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $slugy = $slugger->slug($game->getTitle());
+            $game->setSlug($slugy);
             $entityManager->persist($game);
             $entityManager->flush();
-            return $this->redirectToRoute('app_game');
+            return $this->redirectToRoute('app_game_dashboard');
         }
         return $this->render('game/edit.html.twig', [
             'form' => $form->createView(),
@@ -60,6 +76,13 @@ class GameController extends AbstractController
     #[Route('/game/new', name: 'app_game_new')]
     public function new(EntityManagerInterface $entityManager, Request $request, SluggerInterface $slugger): Response
     {
+        $user = $this->getUser();
+        if ($user === null) {
+            return $this->redirectToRoute('app_login');
+        }
+        elseif ($user->getRoles()[0] !== 'ROLE_ADMIN') {
+            return $this->redirectToRoute('app_game');
+        }
         $game = new Game();
         $form = $this->createForm(GameType::class, $game);
         $form->handleRequest($request);
@@ -78,6 +101,13 @@ class GameController extends AbstractController
     #[Route('/game/dashboard', name: 'app_game_dashboard')]
     public function dashboard(EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
+        if ($user === null) {
+            return $this->redirectToRoute('app_login');
+        }
+        elseif ($user->getRoles()[0] !== 'ROLE_ADMIN') {
+            return $this->redirectToRoute('app_game');
+        }
         $game = $entityManager->getRepository(Game::class)->findAll();
         return $this->render('game/dashboard.html.twig', [
             'games' => $game,

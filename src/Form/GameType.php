@@ -15,7 +15,7 @@ class GameType extends AbstractType
         $builder
             ->add('title')
             ->add('price')
-            ->add('Creer_le_jeu' , SubmitType::class)
+            ->add('Send' , SubmitType::class)
         ;
     }
 
