@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello Game Dashboard!{% endblock %}
+
+{% block body %}
+    {% if is_granted('ROLE_ADMIN') %}
+
+
+    <header><h1>Game Dashboard</h1>
+        <a href="{{ path('app_game_new') }}">Add new game</a>
+
+    </header>
+
+
+
+    {% for game in games %}
+        <h2>{{ game.title }}</h2>
+        <p>{{ game.price }}</p>
+        <a href="{{ path('app_game_edit', {'slug': game.slug}) }}">Edit</a>
+        <form method="post" action="{{ path('app_game_delete', {'slug': game.slug}) }}">
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="hidden" name="csrf" value="{{ csrf_token('delete' ~ game.id) }}">
+            <button type="submit">Delete</button>
+    {% else %}
+        <p>no game</p>
+    {% endfor %}
+    {% else %}
+        <p>Sorry, you are not allowed to access this page</p>
+        <a href="{{ path('app_game') }}">Back to homepage</a>
+    {% endif %}
+{% endblock %}
