@@ -34,7 +34,7 @@ class Game
 
     public function setTitle(string $title): static
     {
-        $this->title = $title;
+        $this->title = htmlspecialchars($title);
 
         return $this;
     }
@@ -46,7 +46,7 @@ class Game
 
     public function setPrice(int $price): static
     {
-        $this->price = $price;
+        $this->price = htmlspecialchars($price);
 
         return $this;
     }
